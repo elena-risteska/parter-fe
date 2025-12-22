@@ -76,32 +76,33 @@ export default function ShowDetails() {
 
       </div>
 
-      {/* Availability */}
-      <div className="mb-10">
-        {hasFreeSeats ? (
-          <p className="text-green-500 font-semibold">
-            Уште {freeSeats} слободни места
-          </p>
-        ) : (
-          <p className="text-red-500 font-semibold">
-            Распродадена
-          </p>
-        )}
-      </div>
+<div className="flex items-center gap-6 mb-10">
+  {/* Action */}
+  <button
+    disabled={!hasFreeSeats}
+    onClick={() => navigate(`/reserve/${show.id}`)}
+    className={`px-6 py-3 rounded-xl font-semibold transition
+      ${
+        hasFreeSeats
+          ? "bg-green-600 hover:bg-green-700 text-white"
+          : "bg-gray-600 text-gray-300 cursor-not-allowed"
+      }`}
+  >
+    Направи резервација
+  </button>
 
-      {/* Action */}
-      <button
-        disabled={!hasFreeSeats}
-onClick={() => navigate(`/reserve/${show.id}`)}
-        className={`px-6 py-3 rounded-xl font-semibold transition
-          ${
-            hasFreeSeats
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-gray-600 text-gray-300 cursor-not-allowed"
-          }`}
-      >
-        Направи резервација
-      </button>
+  {/* Availability */}
+  {hasFreeSeats ? (
+    <p className="text-green-500 font-semibold">
+      Уште {freeSeats} слободни места
+    </p>
+  ) : (
+    <p className="text-red-500 font-semibold">
+      Распродадена
+    </p>
+  )}
+</div>
+
 
     </div>
   )

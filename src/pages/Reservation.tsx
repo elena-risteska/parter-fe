@@ -33,43 +33,49 @@ export default function Reservation() {
   return (
     <div className="max-w-6xl mx-auto p-10">
       
-      <h1 className="text-3xl font-bold mb-4">{show.title}</h1>
-      <p className="text-gray-400 mb-8">
-        {show.date} · {show.time}
-      </p>
+<div className="flex items-center justify-between mb-8">
+  <h1 className="text-3xl font-bold">
+    {show.title}
+  </h1>
+
+  <p className="text-gray-400">
+    {show.date} · {show.time}
+  </p>
+</div>
 
       {/* Screen */}
       <div className="text-center mb-4 text-gray-400">СЦЕНА</div>
       <div className="h-2 bg-gray-600 rounded mb-10" />
 
       {/* Seats */}
-      <div className="grid grid-cols-10 gap-3 justify-center mb-10">
-        {Array.from({ length: TOTAL_SEATS }, (_, i) => {
-          const seatNumber = i + 1
-          const isReserved = reservedSeats.includes(seatNumber)
-          const isSelected = selectedSeats.includes(seatNumber)
+      <div className="grid grid-cols-10 gap-x-20 gap-y-3 justify-center mb-10 w-full max-w-[600px] mx-auto">
+  {Array.from({ length: TOTAL_SEATS }, (_, i) => {
+    const seatNumber = i + 1
+    const isReserved = reservedSeats.includes(seatNumber)
+    const isSelected = selectedSeats.includes(seatNumber)
 
-          return (
-            <button
-              key={seatNumber}
-              onClick={() => toggleSeat(seatNumber)}
-              disabled={isReserved}
-              className={`
-                w-10 h-10 rounded text-sm font-semibold transition
-                ${
-                  isReserved
-                    ? "bg-red-600 cursor-not-allowed text-white"
-                    : isSelected
-                    ? "bg-blue-600 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                }
-              `}
-            >
-              {seatNumber}
-            </button>
-          )
-        })}
-      </div>
+    return (
+      <button
+        key={seatNumber}
+        onClick={() => toggleSeat(seatNumber)}
+        disabled={isReserved}
+        className={`
+          w-12 h-12 rounded text-sm font-semibold transition
+          ${
+            isReserved
+              ? "bg-red-600 cursor-not-allowed text-white"
+              : isSelected
+              ? "bg-blue-600 text-white"
+              : "bg-green-600 hover:bg-green-700 text-white"
+          }
+        `}
+      >
+        {seatNumber}
+      </button>
+    )
+  })}
+</div>
+
 
       {/* Legend */}
       <div className="flex gap-6 mb-10 text-sm">
@@ -86,13 +92,12 @@ export default function Reservation() {
 
       {/* Summary */}
       <div className="p-6 rounded-xl bg-gray-800 text-gray-200 mb-6">
-        <h2 className="text-xl font-semibold mb-2">Твој избор</h2>
-        <p>
-          Седишта:{" "}
+        <h2 className="text-xl font-semibold mb-2">
+                  Твој избор:{" "}
           {selectedSeats.length > 0
             ? selectedSeats.join(", ")
             : "Празно"}
-        </p>
+        </h2>
       </div>
 
       {/* Confirm */}
