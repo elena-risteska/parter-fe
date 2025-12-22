@@ -1,13 +1,12 @@
-import { Link } from "react-router-dom"
-
 export default function Navbar() {
   return (
-    <nav className="bg-neutral-800 p-4 flex justify-between">
-      <Link to="/" className="text-red-500 font-bold text-xl">
-        Партер
-      </Link>
-      <div>
-        <Link to="/" className="mr-4 hover:text-red-400">Репертоар</Link>
+    <nav className="sticky top-0 z-50 bg-neutral-800 border-b border-gray-700">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <h1 className="text-red-500 font-bold text-xl">Партер</h1>
+
+        <div className="flex gap-6 text-gray-300">
+          <a href="/" className="hover:text-red-400">Репертоар</a>
+        </div>
       </div>
     </nav>
   )

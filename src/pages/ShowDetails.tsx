@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { shows } from "../data/shows"
+import { Clock, Calendar, User } from "lucide-react"
+
 
 export default function ShowDetails() {
   const { id } = useParams()
@@ -34,9 +36,44 @@ export default function ShowDetails() {
       {/* Info */}
       <div className="mb-8 space-y-2 text-gray-300">
         <p>{show.description}</p>
-        <p>Времетраење: {show.duration} min</p>
-        <p>Датум: {show.date}</p>
-        <p>Време: {show.time}</p>
+        <div className="space-y-2 text-gray-300">
+  <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-gray-300">
+  <div className="flex items-center gap-2">
+    <Clock size={18} className="text-gray-400" />
+    <span>{show.duration} min</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <Calendar size={18} className="text-gray-400" />
+    <span>{show.date}</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <Clock size={18} className="text-gray-400" />
+    <span>{show.time}</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <User size={18} className="text-gray-400" />
+    <span>Режија: Дејан Пројковски</span>
+  </div>
+</div>
+</div>
+
+        <div className="mt-4">
+  <h3 className="font-semibold mb-2">Играат:</h3>
+  <ul className="space-y-1 text-gray-300">
+    <li>НЕДА – Сара Спиркоска</li>
+    <li>ИВАН – Бобан Алексоски</li>
+    <li>МИЛКА – Катерија Чакмакоска-Клинческа</li>
+    <li>ЛУКОВ – Александар Степанулески</li>
+    <li>ХРИСТОВ – Александар Тодески</li>
+    <li>ФЕЗЛИЕВ – Димитар Ѓорѓиевски</li>
+    <li>МЕТОДИ – Михајло Миленкоски</li>
+    <li>МЛАДИЧОТ – Илија Волчески</li>
+  </ul>
+</div>
+
       </div>
 
       {/* Availability */}
