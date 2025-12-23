@@ -6,6 +6,8 @@ export default function Navbar() {
 
         <div className="flex gap-6 text-gray-300">
           <a href="/" className="hover:text-red-400">Репертоар</a>
+                    <a href="/login" className="hover:text-red-400">Најава</a>
+
         </div>
       </div>
     </nav>
