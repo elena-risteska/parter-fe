@@ -10,7 +10,7 @@ export const shows: Show[] = [
     date: "2025-12-20",
     time: "19:00",
     totalSeats: 120,
-    reservedSeats: 87,
+    reservedSeats: 57,
   },
   {
     id: "2",

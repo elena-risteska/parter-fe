@@ -9,6 +9,7 @@ import ForgotPassword from "./pages/ForgotPassword"
 import ResetPassword from "./pages/ResetPassword"
 import NotFound from "./pages/NotFound"
 import About from "./pages/About"
+import Profile from "./pages/Profile"
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
 <Route path="/reset-password" element={<ResetPassword />} />
 <Route path="*" element={<NotFound />} />
 <Route path="/about" element={<About />} />
+<Route path="/profile" element={<Profile />} />
 
         </Routes>
       </div>

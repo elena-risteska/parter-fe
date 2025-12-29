@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom"
 import { shows } from "../data/shows"
 import { useState } from "react"
 
-const TOTAL_SEATS = 100
+const TOTAL_SEATS = 80
 
 export default function Reservation() {
   const { id } = useParams()
