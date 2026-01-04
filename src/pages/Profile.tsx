@@ -39,10 +39,7 @@ export default function Profile() {
   }
 
   // ✏️ Edit / Delete reservation
-  const [activeReservation, setActiveReservation] = useState<any | null>(null) // edit modal
-  const [editedSeats, setEditedSeats] = useState<number[]>([])
   const [reservationToDelete, setReservationToDelete] = useState<any | null>(null) // delete modal
-  const [confirmEditModal, setConfirmEditModal] = useState(false) // confirmation modal
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-950 pt-16">
@@ -60,7 +57,7 @@ export default function Profile() {
                 <input name="phone" value={profileData.phone} onChange={handleProfileChange} className="input" placeholder="Телефон" />
               </div>
               <button onClick={handleSaveProfile} className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
-                Зачувај промени
+                Промени податоци
               </button>
             </div>
 
@@ -78,7 +75,7 @@ export default function Profile() {
                 <input type="password" placeholder="Нова лозинка" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="input" />
                 <input type="password" placeholder="Потврди лозинка" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="input" />
                 <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
-                  Зачувај лозинка
+                  Промени лозинка
                 </button>
               </form>
             </div>
@@ -101,9 +98,6 @@ export default function Profile() {
                         <p className="font-semibold mt-1">Вкупно: {r.seats.length * r.price} MKD</p>
                       </div>
                       <div className="flex gap-2 mt-2 sm:mt-0">
-                        <button onClick={() => { setActiveReservation(r); setEditedSeats(r.seats) }} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition">
-                          Измени
-                        </button>
                         <button onClick={() => setReservationToDelete(r)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition">
                           Избриши
                         </button>
@@ -114,68 +108,11 @@ export default function Profile() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* LOGOUT */}
-        <button onClick={() => navigate("/login")} className="mt-10 w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition">
+                  <button onClick={() => navigate("/login")} className="mt-10 w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition">
           Одјава
         </button>
+        </div>
       </div>
-
-      {/* EDIT MODAL */}
-      {activeReservation && !confirmEditModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-neutral-900 rounded-2xl p-8 max-w-lg w-full">
-            <h2 className="text-xl font-bold mb-4">Измени резервација</h2>
-            <div className="grid grid-cols-6 gap-3 mb-6">
-              {Array.from({ length: 30 }, (_, i) => {
-                const seat = i + 1
-                const selected = editedSeats.includes(seat)
-                return (
-                  <button key={seat} onClick={() =>
-                    setEditedSeats(prev =>
-                      prev.includes(seat) ? prev.filter(s => s !== seat) : [...prev, seat]
-                    )
-                  } className={`w-10 h-10 rounded-lg text-sm font-semibold ${selected ? "bg-blue-600" : "bg-green-600"} text-white`}>
-                    {seat}
-                  </button>
-                )
-              })}
-            </div>
-            <div className="flex justify-end gap-4">
-              <button onClick={() => setActiveReservation(null)} className="px-4 py-2 bg-gray-700 rounded-lg text-white">
-                Откажи
-              </button>
-              <button onClick={() => setConfirmEditModal(true)} className="px-4 py-2 bg-blue-600 rounded-lg text-white">
-                Зачувај
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CONFIRM EDIT MODAL */}
-      {activeReservation && confirmEditModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-neutral-900 rounded-2xl p-8 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-6">Дали сте сигурни дека сакате да ја промените резервацијата?</h2>
-            <div className="flex justify-end gap-4">
-              <button onClick={() => setConfirmEditModal(false)} className="px-4 py-2 bg-gray-700 rounded-lg text-white">
-                Откажи
-              </button>
-              <button onClick={() => {
-                setReservations(prev => prev.map(r =>
-                  r.id === activeReservation.id ? { ...r, seats: editedSeats } : r
-                ))
-                setActiveReservation(null)
-                setConfirmEditModal(false)
-              }} className="px-4 py-2 bg-blue-600 rounded-lg text-white">
-                Потврди
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* DELETE MODAL */}
       {reservationToDelete && (
