@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom"
 export default function Profile() {
   const navigate = useNavigate()
 
-  // 🔒 Mock user
   const user = {
     firstName: "Елена",
     lastName: "Ристеска",
@@ -12,34 +11,46 @@ export default function Profile() {
     phone: "+389 70 123 456",
   }
 
-  // 🎟️ Reservations
   const [reservations, setReservations] = useState([
     { id: 1, title: "Партер", date: "20.12.2025", time: "20:00", seats: [12, 13, 14], price: 250 },
     { id: 2, title: "Комедија на забуна", date: "05.01.2026", time: "19:30", seats: [7, 8], price: 250 },
   ])
 
-  // ✏️ Profile
   const [profileData, setProfileData] = useState(user)
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setProfileData({ ...profileData, [e.target.name]: e.target.value })
-  const handleSaveProfile = () => console.log("Saved profile:", profileData)
+const handleSaveProfile = () => {
+  console.log("Saved profile:", profileData)
+  setSnackbar({ message: "Податоците се успешно зачувани!", type: "success" })
 
-  // 🔐 Password
+  // auto-hide after 3 seconds
+  setTimeout(() => setSnackbar(null), 3000)
+}
+
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [passwordMessage, setPasswordMessage] = useState("")
   const handleChangePassword = () => {
-    setPasswordError(""); setPasswordMessage("")
-    if (!currentPassword || !newPassword || !confirmPassword) { setPasswordError("Пополни ги сите полиња"); return }
-    if (newPassword !== confirmPassword) { setPasswordError("Лозинките не се совпаѓаат"); return }
-    setPasswordMessage("Лозинката е успешно променета")
-    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("")
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    setSnackbar({ message: "Пополни ги сите полиња", type: "error" })
+    return
   }
 
-  // ✏️ Edit / Delete reservation
+  if (newPassword !== confirmPassword) {
+    setSnackbar({ message: "Лозинките не се совпаѓаат", type: "error" })
+    return
+  }
+
+  setSnackbar({ message: "Лозинката е успешно променета", type: "success" })
+  setCurrentPassword(""); setNewPassword(""); setConfirmPassword("")
+
+  setTimeout(() => setSnackbar(null), 3000)
+}
+
+
   const [reservationToDelete, setReservationToDelete] = useState<any | null>(null) // delete modal
+
+  const [snackbar, setSnackbar] = useState<{ message: string; type: "success" | "error" } | null>(null)
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-950 pt-16">
@@ -47,26 +58,61 @@ export default function Profile() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* LEFT COLUMN */}
           <div className="space-y-8">
-            {/* PROFILE */}
             <div className="bg-neutral-800 rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-semibold mb-6">Лични податоци</h2>
-              <div className="space-y-4">
-                <input name="firstName" value={profileData.firstName} onChange={handleProfileChange} className="input" placeholder="Име" />
-                <input name="lastName" value={profileData.lastName} onChange={handleProfileChange} className="input" placeholder="Презиме" />
-                <input name="email" value={profileData.email} onChange={handleProfileChange} className="input" placeholder="E-пошта" />
-                <input name="phone" value={profileData.phone} onChange={handleProfileChange} className="input" placeholder="Телефон" />
-              </div>
-              <button onClick={handleSaveProfile} className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
-                Промени податоци
-              </button>
-            </div>
+  <h2 className="text-2xl font-semibold mb-6">Лични податоци</h2>
+
+  <form
+    onSubmit={e => {
+      e.preventDefault()
+      handleSaveProfile()
+    }}
+    className="space-y-4"
+  >
+    <input
+      name="firstName"
+      value={profileData.firstName}
+      onChange={handleProfileChange}
+      className="input"
+      placeholder="Име"
+    />
+
+    <input
+      name="lastName"
+      value={profileData.lastName}
+      onChange={handleProfileChange}
+      className="input"
+      placeholder="Презиме"
+    />
+
+    <input
+      name="email"
+      value={profileData.email}
+      disabled
+      className="input opacity-60 cursor-not-allowed"
+      placeholder="E-пошта"
+    />
+
+    <input
+      name="phone"
+      value={profileData.phone}
+      onChange={handleProfileChange}
+      className="input"
+      placeholder="Телефон"
+    />
+
+    <button
+      type="submit"
+      className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition"
+    >
+      Промени податоци
+    </button>
+  </form>
+</div>
+
 
             {/* PASSWORD */}
             <div className="bg-neutral-800 rounded-2xl shadow-xl p-8">
               <h2 className="text-2xl font-semibold mb-6">Промена на лозинка</h2>
-              {passwordError && <p className="text-red-500 mb-4">{passwordError}</p>}
-              {passwordMessage && <p className="text-green-500 mb-4">{passwordMessage}</p>}
-
               <form
                 onSubmit={e => { e.preventDefault(); handleChangePassword() }}
                 className="space-y-4"
@@ -132,8 +178,17 @@ export default function Profile() {
             </div>
           </div>
         </div>
-      )}
+      )}{snackbar && (
+  <div
+    className={`fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl text-white shadow-lg z-50 transition-all duration-300 ${
+      snackbar.type === "success" ? "bg-green-600" : "bg-red-600"
+    }`}
+  >
+    {snackbar.message}
+  </div>
+)}
 
     </div>
+    
   )
 }
