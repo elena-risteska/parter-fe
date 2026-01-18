@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { loginRequest } from "../api/api"
 
 export default function Login() {
   const navigate = useNavigate()
@@ -8,23 +9,26 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    // Temporary frontend validation
-    if (!email || !password) {
-      setError("Внеси е-пошта и лозинка")
-      return
-    }
-
-    setError("")
-
-    // 🔒 Backend login later
-    console.log({ email, password })
-
-    // Temporary success flow
-    navigate("/")
+  if (!email || !password) {
+    setError("Внеси е-пошта и лозинка")
+    return
   }
+
+  try {
+    const data = await loginRequest(email, password)
+
+    // Save token
+    localStorage.setItem("token", data.token)
+    localStorage.setItem("user", JSON.stringify(data.user))
+
+    navigate("/")
+  } catch (err: any) {
+    setError(err.message)
+  }
+}
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-gray-950">
