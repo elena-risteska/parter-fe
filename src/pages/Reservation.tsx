@@ -18,17 +18,17 @@ export default function Reservation() {
   const [reservedSeats, setReservedSeats] = useState<number[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ Protect route: redirect to login if not logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-    }
+    if (!token) navigate("/login");
   }, [navigate]);
 
-  // ✅ Fetch show & reserved seats
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -37,17 +37,14 @@ export default function Reservation() {
         setShow(showData);
 
         const token = localStorage.getItem("token");
-        if (!token) return; // don't fetch reserved seats if not logged in
+        if (!token) return;
 
         const seatsRes = await fetch(
           `http://localhost:5000/api/reservations/play/${id}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           },
         );
-
         const seatsData = await seatsRes.json();
         const allReservedSeats = seatsData.flatMap((r: any) => r.seats);
         setReservedSeats(allReservedSeats);
@@ -55,7 +52,6 @@ export default function Reservation() {
         console.error("Failed to load reservation data", err);
       }
     };
-
     fetchData();
   }, [id]);
 
@@ -76,20 +72,47 @@ export default function Reservation() {
 
   const TICKET_PRICE = show.price;
 
-  const handleConfirmReservation = () => {
+  const handleConfirmReservation = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return navigate("/login");
+
     if (selectedSeats.length === 0) return;
 
-    // 🔹 Here you'd call your API to save the reservation
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/reservations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          play_id: show.id,
+          seats: selectedSeats,
+        }),
+      });
 
-    setIsModalOpen(false);
-    setSnackbarVisible(true);
-    setSelectedSeats([]);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to make reservation");
+      }
 
-    // ✅ Redirect to profile after reservation
-    setTimeout(() => {
-      setSnackbarVisible(false);
-      navigate("/profile");
-    }, 1500); // short delay to show snackbar
+      setSnackbar({ message: "Резервацијата е успешна!", type: "success" });
+      setReservedSeats((prev) => [...prev, ...selectedSeats]);
+      setSelectedSeats([]);
+      setIsModalOpen(false);
+
+      setTimeout(() => {
+        setSnackbar(null);
+        navigate("/profile");
+      }, 1500);
+    } catch (err: any) {
+      console.error(err);
+      setSnackbar({ message: err.message, type: "error" });
+      setTimeout(() => setSnackbar(null), 3000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -135,19 +158,6 @@ export default function Reservation() {
         })}
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-6 mb-10 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="w-4 h-4 bg-green-600 rounded" /> Слободно
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-4 h-4 bg-red-600 rounded" /> Резервирано
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-4 h-4 bg-blue-600 rounded" /> Избрано
-        </div>
-      </div>
-
       {/* Summary */}
       <div className="p-6 rounded-xl bg-gray-800 text-gray-200 mb-6">
         <h2 className="text-xl font-semibold">
@@ -164,7 +174,7 @@ export default function Reservation() {
 
       {/* Confirm button */}
       <button
-        disabled={selectedSeats.length === 0}
+        disabled={selectedSeats.length === 0 || loading}
         onClick={() => setIsModalOpen(true)}
         className={`px-8 py-3 rounded-xl font-semibold transition
           ${
@@ -212,9 +222,13 @@ export default function Reservation() {
       )}
 
       {/* Snackbar */}
-      {snackbarVisible && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg z-50">
-          Резервацијата е успешна!
+      {snackbar && (
+        <div
+          className={`fixed bottom-5 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl text-white shadow-lg z-50 transition-all duration-300 ${
+            snackbar.type === "success" ? "bg-green-600" : "bg-red-600"
+          }`}
+        >
+          {snackbar.message}
         </div>
       )}
     </div>
