@@ -1,14 +1,12 @@
-import { Navigate } from "react-router-dom"
-import { isLoggedIn } from "../utils/auth"
-import type { JSX } from "react"
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-type Props = {
-  children: JSX.Element
-}
+export default function ProtectedRoute() {
+  const { loggedIn } = useAuth();
 
-export function ProtectedRoute({ children }: Props) {
-  if (!isLoggedIn()) {
-    return <Navigate to="/login" replace />
+  if (!loggedIn) {
+    return <Navigate to="/login" replace />;
   }
-  return children
+
+  return <Outlet />;
 }

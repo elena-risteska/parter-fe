@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 type Show = {
@@ -12,6 +12,7 @@ type Show = {
 
 export default function Reservation() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [show, setShow] = useState<Show | null>(null);
   const [reservedSeats, setReservedSeats] = useState<number[]>([]);
@@ -19,16 +20,24 @@ export default function Reservation() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
 
+  // ✅ Protect route: redirect to login if not logged in
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+    }
+  }, [navigate]);
+
+  // ✅ Fetch show & reserved seats
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 🔹 Load show (public)
         const showRes = await fetch(`http://localhost:5000/api/plays/${id}`);
         const showData = await showRes.json();
         setShow(showData);
 
-        // 🔹 Load reserved seats (protected)
         const token = localStorage.getItem("token");
+        if (!token) return; // don't fetch reserved seats if not logged in
 
         const seatsRes = await fetch(
           `http://localhost:5000/api/reservations/play/${id}`,
@@ -40,10 +49,7 @@ export default function Reservation() {
         );
 
         const seatsData = await seatsRes.json();
-        console.log("Seats data from backend:", seatsData);
-
         const allReservedSeats = seatsData.flatMap((r: any) => r.seats);
-
         setReservedSeats(allReservedSeats);
       } catch (err) {
         console.error("Failed to load reservation data", err);
@@ -63,13 +69,28 @@ export default function Reservation() {
 
   const toggleSeat = (seat: number) => {
     if (reservedSeats.includes(seat)) return;
-
     setSelectedSeats((prev) =>
       prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat],
     );
   };
 
   const TICKET_PRICE = show.price;
+
+  const handleConfirmReservation = () => {
+    if (selectedSeats.length === 0) return;
+
+    // 🔹 Here you'd call your API to save the reservation
+
+    setIsModalOpen(false);
+    setSnackbarVisible(true);
+    setSelectedSeats([]);
+
+    // ✅ Redirect to profile after reservation
+    setTimeout(() => {
+      setSnackbarVisible(false);
+      navigate("/profile");
+    }, 1500); // short delay to show snackbar
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-10">
@@ -180,13 +201,8 @@ export default function Reservation() {
               </button>
 
               <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setSnackbarVisible(true);
-                  setSelectedSeats([]);
-                  setTimeout(() => setSnackbarVisible(false), 3000);
-                }}
-                className="px-4 py-2 bg-green-600 rounded"
+                onClick={handleConfirmReservation}
+                className="px-4 py-2 bg-green-600 rounded text-white"
               >
                 Потврди
               </button>
