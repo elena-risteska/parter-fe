@@ -38,7 +38,7 @@ export default function Home() {
 
   return (
     <div className="p-10 flex flex-col items-center">
-      <h1 className="text-4xl font-bold mb-8 text-center">
+      <h1 className="text-4xl font-bold mb-16 text-center">
         Претстави на репертоар
       </h1>
 

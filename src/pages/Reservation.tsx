@@ -33,6 +33,7 @@ export default function Reservation() {
     const fetchData = async () => {
       try {
         const showRes = await fetch(`http://localhost:5000/api/plays/${id}`);
+        if (!showRes.ok) throw new Error("Play not found");
         const showData = await showRes.json();
         setShow(showData);
 

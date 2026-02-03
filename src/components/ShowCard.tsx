@@ -7,12 +7,12 @@ type Props = {
 
 export default function ShowCard({ show }: Props) {
   return (
-    <Link to={`/show/${show.id}`} className="group perspective">
+    <Link to={`/show/${show.id}`} className="group perspective inline-block">
       <div className="relative h-80 w-60 transition-transform duration-700 transform-style-preserve-3d group-hover:rotate-y-180">
         {/* Front side */}
         <div className="absolute inset-0 backface-hidden rounded-xl overflow-hidden shadow-lg">
           <img
-            src={show.image || "/poster-placeholder.svg"}
+            src={show.image || "/teatar.jpg"}
             alt={show.title}
             className="h-full w-full object-cover"
           />
@@ -27,6 +27,11 @@ export default function ShowCard({ show }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Title below the card */}
+      <h3 className="mt-3 text-center text-lg font-semibold text-white-800 dark:text-gray-200">
+        {show.title}
+      </h3>
     </Link>
   );
 }

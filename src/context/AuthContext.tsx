@@ -12,6 +12,7 @@ type User = {
 type AuthContextType = {
   loggedIn: boolean;
   user: User | null;
+  token: string | null; // <-- add this
   login: (token: string, user: User) => void;
   logout: () => void;
 };
@@ -23,12 +24,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
-  const [loggedIn, setLoggedIn] = useState(!!localStorage.getItem("token"));
+
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token"),
+  );
+
+  const [loggedIn, setLoggedIn] = useState(!!token);
 
   const login = (token: string, user: User) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
     setUser(user);
+    setToken(token); // <-- save token in state
     setLoggedIn(true);
   };
 
@@ -36,11 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    setToken(null); // <-- clear token
     setLoggedIn(false);
   };
 
   return (
-    <AuthContext.Provider value={{ loggedIn, user, login, logout }}>
+    <AuthContext.Provider value={{ loggedIn, user, token, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

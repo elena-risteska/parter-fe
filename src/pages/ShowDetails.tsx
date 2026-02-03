@@ -7,19 +7,44 @@ export default function ShowDetails() {
   const navigate = useNavigate();
 
   const [show, setShow] = useState<any>(null);
+  const [reservedCount, setReservedCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/plays/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Not found");
-        return res.json();
-      })
-      .then((data) => {
-        setShow(data);
+    const fetchData = async () => {
+      try {
+        // 1️⃣ Fetch show details
+        const showRes = await fetch(`http://localhost:5000/api/plays/${id}`);
+        if (!showRes.ok) throw new Error("Show not found");
+        const showData = await showRes.json();
+
+        // 2️⃣ Fetch reserved seats (if logged in)
+        const token = localStorage.getItem("token");
+        let reservedSeats: number[] = [];
+        if (token) {
+          const res = await fetch(
+            `http://localhost:5000/api/reservations/play/${id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
+          if (res.ok) {
+            const data = await res.json();
+            reservedSeats = data.flatMap((r: any) => r.seats);
+          }
+        }
+
+        setShow(showData);
+        setReservedCount(reservedSeats.length);
+      } catch (err) {
+        console.error(err);
+        setShow(null);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, [id]);
 
   if (loading) {
@@ -30,7 +55,7 @@ export default function ShowDetails() {
     return <div className="p-10 text-center text-red-500">Show not found</div>;
   }
 
-  const freeSeats = show.total_seats;
+  const freeSeats = show.total_seats - reservedCount;
   const hasFreeSeats = freeSeats > 0;
 
   return (
@@ -38,7 +63,7 @@ export default function ShowDetails() {
       {/* Hero */}
       <div className="relative h-96 rounded-2xl overflow-hidden mb-10">
         <img
-          src={show.image || "/placeholder.jpg"}
+          src={show.image || "/teatar.jpg"}
           alt={show.title}
           className="w-full h-full object-cover"
         />
@@ -93,7 +118,11 @@ export default function ShowDetails() {
       <div className="flex items-center gap-6">
         <button
           disabled={!hasFreeSeats}
-          onClick={() => navigate(`/reserve/${show.id}`)}
+          onClick={() => {
+            const token = localStorage.getItem("token");
+            if (!token) return navigate("/login");
+            navigate(`/reserve/${show.id}`);
+          }}
           className={`px-6 py-3 rounded-xl font-semibold transition
             ${
               hasFreeSeats
