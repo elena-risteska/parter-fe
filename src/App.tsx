@@ -22,7 +22,7 @@ export default function App() {
         <Navbar />
 
         <Routes>
-          {/* Public routes */}
+          {/* Public */}
           <Route path="/" element={<Home />} />
           <Route path="/show/:id" element={<ShowDetails />} />
           <Route path="/about" element={<About />} />
@@ -31,15 +31,17 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Protected routes */}
+          {/* User */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
-            <Route path="/admin" element={<Admin />} />
-
             <Route path="/reserve/:id" element={<Reservation />} />
           </Route>
 
-          {/* 404 */}
+          {/* Admin */}
+          <Route element={<ProtectedRoute adminOnly />}>
+            <Route path="/admin" element={<Admin />} />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

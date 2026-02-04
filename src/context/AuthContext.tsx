@@ -6,7 +6,7 @@ type User = {
   firstName: string;
   lastName: string;
   email: string;
-  role?: string;
+  role: "admin" | "user";
 };
 
 type AuthContextType = {
@@ -20,33 +20,31 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token"),
+  );
+
   const [user, setUser] = useState<User | null>(() => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
 
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem("token"),
-  );
-
-  const [loggedIn, setLoggedIn] = useState(!!token);
+  const loggedIn = !!token;
 
   const login = (token: string, user: User) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
 
-    setUser(user);
     setToken(token);
-    setLoggedIn(true);
+    setUser(user);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    setUser(null);
     setToken(null);
-    setLoggedIn(false);
+    setUser(null);
   };
 
   return (

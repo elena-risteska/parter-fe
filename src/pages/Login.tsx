@@ -13,6 +13,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
     if (!email || !password) {
       setError("Внеси е-пошта и лозинка");
@@ -21,15 +22,18 @@ export default function Login() {
 
     try {
       const data = await loginRequest(email, password);
+      // EXPECTED BACKEND RESPONSE:
+      // { token, user: { id, firstName, lastName, email, role } }
 
       login(data.token, data.user);
-      if (data.role === "admin") {
-        navigate("/admin");
+
+      if (data.user.role === "admin") {
+        navigate("/admin", { replace: true });
       } else {
-        navigate("/profile");
+        navigate("/profile", { replace: true });
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Грешка при најава");
     }
   };
 

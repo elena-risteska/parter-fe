@@ -43,8 +43,6 @@ export default function Admin() {
     type: "success" | "error";
   } | null>(null);
 
-  /* ================= FETCH ================= */
-
   const fetchPlays = async () => {
     try {
       const res = await fetch(`${API_URL}/plays`, {
@@ -75,8 +73,6 @@ export default function Admin() {
     fetchPlays();
     fetchReservations();
   }, [token]);
-
-  /* ================= PLAYS ================= */
 
   const handleSavePlay = async () => {
     try {
@@ -130,23 +126,25 @@ export default function Admin() {
     }
   };
 
-  /* ================= RESERVATIONS ================= */
-
-  const handleCancelReservation = async (id: number) => {
-    if (!window.confirm("Откажи резервација?")) return;
+  const handleDeleteReservation = async (id: number) => {
+    if (
+      !window.confirm(
+        "Дали сте сигурни дека сакате да ја избришете резервацијата?",
+      )
+    )
+      return;
     try {
       const res = await fetch(`${API_URL}/reservations/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) throw new Error("Failed to delete reservation");
       setReservations((r) => r.filter((x) => x.id !== id));
+      setSnackbar({ message: "Резервацијата е избришана", type: "success" });
     } catch (err: any) {
       setSnackbar({ message: err.message, type: "error" });
     }
   };
-
-  /* ================= UI ================= */
 
   const playForm = editingPlay ?? newPlay;
 
@@ -232,13 +230,13 @@ export default function Admin() {
                 </p>
                 <p>Места: {r.seats.join(", ")}</p>
                 <p>Вкупно: {r.total_price} MKD</p>
-                <p>Статус: {r.status}</p>
+                {/* <p>Статус: {r.status}</p> */}
               </div>
               <button
-                onClick={() => handleCancelReservation(r.id)}
+                onClick={() => handleDeleteReservation(r.id)}
                 className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-xl"
               >
-                Откажи
+                Избриши
               </button>
             </div>
           ))}
