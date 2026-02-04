@@ -6,7 +6,7 @@ const API_URL = "http://localhost:5000/api";
 type Play = {
   id: number;
   title: string;
-  description: string;
+  description?: string;
   date: string;
   time: string;
   duration?: number;
@@ -20,7 +20,7 @@ type Reservation = {
   title: string;
   date: string;
   time: string;
-  seats: string[];
+  seats: number[];
   total_price: number;
   status: string;
   user_id: number;
@@ -35,22 +35,23 @@ export default function Admin() {
   const [tab, setTab] = useState<"Претстави" | "Резервации">("Претстави");
   const [plays, setPlays] = useState<Play[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [editingPlay, setEditingPlay] = useState<Play | null>(null);
+  const [newPlay, setNewPlay] = useState<Partial<Play> | null>(null);
+
   const [snackbar, setSnackbar] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
 
-  const [editingPlay, setEditingPlay] = useState<Play | null>(null);
-  const [newPlay, setNewPlay] = useState<Partial<Play>>({});
+  /* ================= FETCH ================= */
 
-  // Fetch data
   const fetchPlays = async () => {
     try {
       const res = await fetch(`${API_URL}/plays`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch plays");
+      if (!res.ok) throw new Error(data.error);
       setPlays(data);
     } catch (err: any) {
       setSnackbar({ message: err.message, type: "error" });
@@ -63,8 +64,7 @@ export default function Admin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.error || "Failed to fetch reservations");
+      if (!res.ok) throw new Error(data.error);
       setReservations(data);
     } catch (err: any) {
       setSnackbar({ message: err.message, type: "error" });
@@ -76,81 +76,79 @@ export default function Admin() {
     fetchReservations();
   }, [token]);
 
-  // Play handlers
-  const handleDeletePlay = async (id: number) => {
-    if (
-      !window.confirm(
-        "Дали сте сигурни дека сакате да ја избришете претставата?",
-      )
-    )
-      return;
-    try {
-      const res = await fetch(`${API_URL}/plays/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to delete play");
-      setPlays((prev) => prev.filter((p) => p.id !== id));
-      setSnackbar({ message: "Претставата е избришана", type: "success" });
-    } catch (err: any) {
-      setSnackbar({ message: err.message, type: "error" });
-    }
-  };
+  /* ================= PLAYS ================= */
 
   const handleSavePlay = async () => {
     try {
-      const isEditing = !!editingPlay;
-      const url = isEditing
-        ? `${API_URL}/plays/${editingPlay!.id}`
-        : `${API_URL}/plays`;
-      const method = isEditing ? "PUT" : "POST";
+      const isEdit = !!editingPlay;
+      const payload = isEdit ? editingPlay : newPlay;
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        isEdit ? `${API_URL}/plays/${editingPlay!.id}` : `${API_URL}/plays`,
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...payload,
+            price: Number(payload?.price),
+            duration: payload?.duration ? Number(payload.duration) : null,
+            total_seats: Number(payload?.total_seats),
+          }),
         },
-        body: JSON.stringify(isEditing ? editingPlay : newPlay),
-      });
+      );
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save play");
+      if (!res.ok) throw new Error(data.error);
 
       setSnackbar({
-        message: isEditing
-          ? "Претставата е изменета"
-          : "Претставата е додадена",
+        message: isEdit ? "Претставата е изменета" : "Претставата е додадена",
         type: "success",
       });
+
       setEditingPlay(null);
-      setNewPlay({});
+      setNewPlay(null);
       fetchPlays();
     } catch (err: any) {
       setSnackbar({ message: err.message, type: "error" });
     }
   };
 
-  // Reservation handlers
+  const handleDeletePlay = async (id: number) => {
+    if (!window.confirm("Дали сте сигурни?")) return;
+    try {
+      const res = await fetch(`${API_URL}/plays/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setPlays((p) => p.filter((x) => x.id !== id));
+    } catch (err: any) {
+      setSnackbar({ message: err.message, type: "error" });
+    }
+  };
+
+  /* ================= RESERVATIONS ================= */
+
   const handleCancelReservation = async (id: number) => {
-    if (
-      !window.confirm(
-        "Дали сте сигурни дека сакате да ја откажете резервацијата?",
-      )
-    )
-      return;
+    if (!window.confirm("Откажи резервација?")) return;
     try {
       const res = await fetch(`${API_URL}/reservations/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Failed to cancel reservation");
-      setReservations((prev) => prev.filter((r) => r.id !== id));
-      setSnackbar({ message: "Резервацијата е откажана", type: "success" });
+      if (!res.ok) throw new Error("Failed");
+      setReservations((r) => r.filter((x) => x.id !== id));
     } catch (err: any) {
       setSnackbar({ message: err.message, type: "error" });
     }
   };
+
+  /* ================= UI ================= */
+
+  const playForm = editingPlay ?? newPlay;
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-gray-950 pt-16 px-6 max-w-7xl mx-auto">
@@ -159,176 +157,146 @@ export default function Admin() {
         {["Претстави", "Резервации"].map((t) => (
           <button
             key={t}
-            className={`px-4 py-2 rounded-xl font-semibold transition ${
+            onClick={() => setTab(t as any)}
+            className={`px-4 py-2 rounded-xl font-semibold ${
               tab === t
                 ? "bg-blue-600 text-white"
-                : "bg-neutral-800 text-gray-300 hover:bg-neutral-700"
+                : "bg-neutral-800 hover:bg-neutral-700"
             }`}
-            onClick={() => setTab(t as any)}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {t}
           </button>
         ))}
       </div>
 
-      {/* Plays Tab */}
+      {/* PLAYS */}
       {tab === "Претстави" && (
-        <div className="bg-neutral-800 rounded-2xl shadow-xl p-6 space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="bg-neutral-800 p-6 rounded-2xl space-y-4">
+          <div className="flex justify-between">
             <h2 className="text-xl font-semibold">Претстави</h2>
             <button
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition"
               onClick={() => setNewPlay({})}
+              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-xl"
             >
               Додади претстава
             </button>
           </div>
 
-          {plays.length === 0 ? (
-            <p className="text-gray-400 text-center">Нема претстави</p>
-          ) : (
-            <div className="space-y-2">
-              {plays.map((p) => (
-                <div
-                  key={p.id}
-                  className="flex justify-between bg-neutral-900 p-4 rounded-xl items-center"
+          {plays.map((p) => (
+            <div
+              key={p.id}
+              className="bg-neutral-900 p-4 rounded-xl flex justify-between"
+            >
+              <div>
+                <h3 className="text-green-400 font-semibold">{p.title}</h3>
+                <p>
+                  {p.date} · {p.time}
+                </p>
+                <p>Цена: {p.price} MKD</p>
+                <p>Режисер: {p.director}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingPlay(p)}
+                  className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded-xl"
                 >
-                  <div>
-                    <h3 className="font-semibold text-green-400">{p.title}</h3>
-                    <p className="text-gray-400">
-                      {p.date} · {p.time}
-                    </p>
-                    <p className="text-sm">Цена: {p.price} MKD</p>
-                    <p className="text-sm">Режисер: {p.director}</p>
-                    <p className="text-sm">Вкупно седишта: {p.total_seats}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-semibold transition"
-                      onClick={() => setEditingPlay(p)}
-                    >
-                      Измени
-                    </button>
-                    <button
-                      onClick={() => handleDeletePlay(p.id)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition"
-                    >
-                      Избриши
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add/Edit Play Modal */}
-          {(editingPlay || Object.keys(newPlay).length > 0) && (
-            <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
-              <div className="bg-neutral-800 p-6 rounded-2xl w-full max-w-lg space-y-4 relative">
-                <h3 className="text-xl font-semibold">
-                  {editingPlay ? "Измени претстава" : "Додади претстава"}
-                </h3>
-                {[
-                  "title",
-                  "description",
-                  "date",
-                  "time",
-                  "duration",
-                  "director",
-                  "price",
-                  "total_seats",
-                ].map((field) => (
-                  <input
-                    key={field}
-                    type={
-                      field === "price" ||
-                      field === "duration" ||
-                      field === "total_seats"
-                        ? "number"
-                        : "text"
-                    }
-                    placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                    value={
-                      editingPlay
-                        ? (editingPlay as any)[field] || ""
-                        : (newPlay as any)[field] || ""
-                    }
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (editingPlay)
-                        setEditingPlay({ ...editingPlay, [field]: val });
-                      else setNewPlay({ ...newPlay, [field]: val });
-                    }}
-                    className="input w-full"
-                  />
-                ))}
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-semibold transition"
-                    onClick={() => {
-                      setEditingPlay(null);
-                      setNewPlay({});
-                    }}
-                  >
-                    Откажи
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition"
-                    onClick={handleSavePlay}
-                  >
-                    Зачувај
-                  </button>
-                </div>
+                  Измени
+                </button>
+                <button
+                  onClick={() => handleDeletePlay(p.id)}
+                  className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-xl"
+                >
+                  Избриши
+                </button>
               </div>
             </div>
-          )}
+          ))}
         </div>
       )}
 
-      {/* Reservations Tab */}
+      {/* RESERVATIONS */}
       {tab === "Резервации" && (
-        <div className="bg-neutral-800 rounded-2xl shadow-xl p-6 space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Резервации</h2>
-          {reservations.length === 0 ? (
-            <p className="text-gray-400 text-center">Нема резервации</p>
-          ) : (
-            <div className="space-y-2">
-              {reservations.map((r) => (
-                <div
-                  key={r.id}
-                  className="flex justify-between bg-neutral-900 p-4 rounded-xl items-center"
-                >
-                  <div>
-                    <h3 className="font-semibold text-green-400">{r.title}</h3>
-                    <p className="text-gray-400">
-                      {r.date} · {r.time}
-                    </p>
-                    <p className="text-sm">
-                      Корисник: {r.first_name} {r.last_name}
-                    </p>
-                    <p className="text-sm">Места: {r.seats.join(", ")}</p>
-                    <p className="font-semibold">Вкупно: {r.total_price} MKD</p>
-                    <p className="text-sm">Статус: {r.status}</p>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => handleCancelReservation(r.id)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition"
-                    >
-                      Откажи
-                    </button>
-                  </div>
-                </div>
-              ))}
+        <div className="bg-neutral-800 p-6 rounded-2xl space-y-4">
+          {reservations.map((r) => (
+            <div
+              key={r.id}
+              className="bg-neutral-900 p-4 rounded-xl flex justify-between"
+            >
+              <div>
+                <h3 className="text-green-400 font-semibold">{r.title}</h3>
+                <p>
+                  {r.date} · {r.time}
+                </p>
+                <p>
+                  Корисник: {r.first_name} {r.last_name}
+                </p>
+                <p>Места: {r.seats.join(", ")}</p>
+                <p>Вкупно: {r.total_price} MKD</p>
+                <p>Статус: {r.status}</p>
+              </div>
+              <button
+                onClick={() => handleCancelReservation(r.id)}
+                className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded-xl"
+              >
+                Откажи
+              </button>
             </div>
-          )}
+          ))}
+        </div>
+      )}
+
+      {/* MODAL */}
+      {playForm && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center">
+          <div className="bg-neutral-800 p-6 rounded-2xl space-y-3 w-full max-w-lg">
+            {[
+              "title",
+              "description",
+              "date",
+              "time",
+              "duration",
+              "director",
+              "price",
+              "total_seats",
+            ].map((f) => (
+              <input
+                key={f}
+                className="input w-full"
+                placeholder={f}
+                value={(playForm as any)[f] || ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  editingPlay
+                    ? setEditingPlay({ ...editingPlay, [f]: v })
+                    : setNewPlay({ ...(newPlay || {}), [f]: v });
+                }}
+              />
+            ))}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setEditingPlay(null);
+                  setNewPlay(null);
+                }}
+                className="bg-gray-600 px-4 py-2 rounded-xl"
+              >
+                Откажи
+              </button>
+              <button
+                onClick={handleSavePlay}
+                className="bg-blue-600 px-4 py-2 rounded-xl"
+              >
+                Зачувај
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Snackbar */}
       {snackbar && (
         <div
-          className={`fixed bottom-5 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl text-white shadow-lg z-50 transition-all duration-300 ${
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl ${
             snackbar.type === "success" ? "bg-green-600" : "bg-red-600"
           }`}
         >

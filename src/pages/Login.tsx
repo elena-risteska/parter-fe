@@ -23,7 +23,11 @@ export default function Login() {
       const data = await loginRequest(email, password);
 
       login(data.token, data.user);
-      navigate("/");
+      if (data.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/profile");
+      }
     } catch (err: any) {
       setError(err.message);
     }

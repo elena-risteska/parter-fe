@@ -12,7 +12,7 @@ type User = {
 type AuthContextType = {
   loggedIn: boolean;
   user: User | null;
-  token: string | null; // <-- add this
+  token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
 };
@@ -34,16 +34,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (token: string, user: User) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(user));
+
     setUser(user);
-    setToken(token); // <-- save token in state
+    setToken(token);
     setLoggedIn(true);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
     setUser(null);
-    setToken(null); // <-- clear token
+    setToken(null);
     setLoggedIn(false);
   };
 
@@ -56,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
   return context;
 }
