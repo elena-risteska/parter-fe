@@ -58,7 +58,7 @@ export default function Admin() {
 
   const fetchReservations = async () => {
     try {
-      const res = await fetch(`${API_URL}/reservations`, {
+      const res = await fetch(`${API_URL}/reservations/admin/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
